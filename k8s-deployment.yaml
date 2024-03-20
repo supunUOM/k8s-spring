@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-app
+  labels:
+    app: spring-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app : spring-app
+  template:
+    metadata:
+      labels:
+        app: spring-app
+    spec:
+      containers:
+        - name: spring-app
+          image: supunsandaruwan/spring-app:1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"  # Maximum CPU usage allowed by this container
+              memory: "512Mi"
+          # requests:
+          #     cpu: "0.5"  # Initial CPU request for this container
+          #     memory: "256Mi"
+
+---
+#service for the app
+apiVersion: v1
+kind: Service
+metadata:
+  name:  user-service
+spec:
+  selector: #manage any pod that label exist as 'app:spring-app'
+    app:  spring-app
+  # type: NodePort
+  ports:
+    - protocol: TCP
+      port:  8087
+      targetPort:  8080 #container port
+
+
+---
+#this kind of services(LoadBalancer) will provide the external IP address
+apiVersion: v1
+kind: Service
+metadata:
+  name:  external-service
+spec:
+  selector:
+    app:  spring-app
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port:  8087
+      targetPort:  8080 #container port
+      nodePort: 30001
